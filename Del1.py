@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 utslapp = pd.read_csv('utslappRCP45.csv')
+koncentrationer = pd.read_csv('koncentrationerRCP45.csv')
 
 
 # TASK 1
-beta = 0.35
+beta = 0.32
 
 B_0 = np.array([600, 600, 1500])
 F_0 = np.array([[0, 60, 0],
@@ -51,11 +52,11 @@ def Mt6(t, U):
     I = lambda t_hat: np.sum(np.multiply(A, np.exp(np.divide(-t_hat, tau))))
     return B_0[0] + np.sum(I(t-t_tilde)*U[t_tilde] for t_tilde in range(t+1))
 
-# B_array = np.zeros((len(utslapp['CO2 Emissions  (CO2 GtC/yr)']) + 1, 3))
-# B_array[0] = B_0
+B_array = np.zeros((len(utslapp['CO2 Emissions  (CO2 GtC/yr)']), 3))
+B_array[0] = B_0
 B = B_0
 
-U_array = np.zeros(len(utslapp['CO2 Emissions  (CO2 GtC/yr)']) + 1)
+U_array = np.zeros(len(utslapp['CO2 Emissions  (CO2 GtC/yr)']))
 
 
 for i in range(len(utslapp['CO2 Emissions  (CO2 GtC/yr)'])):
@@ -67,6 +68,16 @@ for i in range(len(utslapp['CO2 Emissions  (CO2 GtC/yr)'])):
                    NPP - Alpha[1,2]*B[1] - Alpha[1,0]*B[1] + B[1],
                    Alpha[1,2]*B[1] - Alpha[2,0]*B[2] + B[2]])
     
-    # B_array[i] = B
+    B_array[i] = B
 
-    print(utslapp['Time (year)'][i], B*0.469)
+    if i < 336:
+        print(utslapp['Time (year)'][i], B*0.469)
+
+
+plt.plot(utslapp['Time (year)'][:336], B_array[:336,0]*0.469, label='Calculated koncentrationer')
+plt.plot(utslapp['Time (year)'][:336], koncentrationer['CO2ConcRCP45 (ppm CO2)'][:336], label='Actual koncentrationer')
+plt.xlabel('Time (year)')
+plt.ylabel('Koncentrationer (GtC)') 
+plt.title('Koncentrationer over tid')
+plt.legend()
+plt.show()
