@@ -36,9 +36,9 @@ RF = 1
 c = 4186
 p = 1020
 h = 50
-c1 = c*p*h/1314000
+c1 = c*p*h/31556952
 d = 2000
-c2 = c*p*d/1314000
+c2 = c*p*d/31556952
 
 def delt1(c1, rf, lambd, t1, t2, k):
     return (rf-t1/lambd-k*(t1-t2))/c1
@@ -81,20 +81,29 @@ temperature_anomalies = pd.to_numeric(temperature_anomalies, errors='coerce')
 # print(years)
 # print(year)
 
-year = year[115:265]
-rfdata = rfdata[115:265]
-t1data = t1data[115:265]
+tempaverage = np.mean(t1data[186:216])
+print(year[186:216])
+# t1data = np.subtract(t1data, tempaverage)
+
+temperature_anomalies = np.add(temperature_anomalies, tempaverage)
+
+year = year[:260]
+rfdata = rfdata[:260]
+t1data = t1data[:260]
+
+# t1data[196:216]
 
 # Plot the data
 plt.figure(figsize=(10, 6))
-plt.plot(years, temperature_anomalies, color='red')
+plt.plot(years, temperature_anomalies, label='Observed', color='red')
 plt.plot(year, t1data, label='Model', color='blue')
-plt.plot(year, rfdata, label='Observed', color='green')
-# plt.xlabel('Year')
-# plt.ylabel('Temperature Anomaly (°C)')
-# plt.title('Global Temperature Anomalies Over Time (NASA GISS)')
+# plt.plot(year, rfdata, label='Observed', color='green')
+plt.xlabel('Year')
+plt.ylabel('Temperature Anomaly (°C)')
+plt.title('Global Temperature Anomalies Over Time (NASA GISS)')
 # plt.grid(True)
-# plt.legend()
+plt.legend()
+plt.hlines(0, 1765, 2024, colors='black', linestyles='dashed')
 
 
 plt.show()

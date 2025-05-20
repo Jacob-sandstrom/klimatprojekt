@@ -8,10 +8,10 @@ pco20 = 278.05158
 
 data = pd.read_csv('radiativeForcingRCP45.csv')
 s = 1
-year = data["Time (year)"].values   
-rfdata = data["RF CO2 (W/m2)"].values
-rfdata += data["RF aerosols (W/m2)"].values * s
-rfdata += data["RF other than CO2 and aerosols (W/m2)"].values 
+year = np.array(data["Time (year)"].values)
+rfdata = np.array(data["RF CO2 (W/m2)"].values)
+rfdata += np.array(data["RF aerosols (W/m2)"].values * s)
+rfdata += np.array(data["RF other than CO2 and aerosols (W/m2)"].values)
 
 
 concentration_data = pd.read_csv('koncentrationerRCP45.csv')
@@ -23,15 +23,14 @@ rfmodel = []
 for i in range(len(year_concentration)):
     rfmodel.append(5.35*np.log(co2_concentration[i]/pco20))
 
-print(data)
 # plt.plot(year_concentration, rfmodel, label='model', color='blue')
-plt.plot(year, rfdata, label='Observed', color='red')
-plt.plot(year, data["RF CO2 (W/m2)"].values, label='Observed, CO2', color='green')
-plt.xlabel('Time (years)')
-plt.ylabel('Radiative forcing (W/m2)')
-plt.title('Radiative forcing')  
-plt.legend()
-plt.show()
+# plt.plot(year, rfdata, label='Observed', color='red')
+# plt.plot(year, data["RF CO2 (W/m2)"].values, label='Observed, CO2', color='green')
+# plt.xlabel('Time (years)')
+# plt.ylabel('Radiative forcing (W/m2)')
+# plt.title('Radiative forcing')  
+# plt.legend()
+# plt.show()
 
 
 
@@ -44,9 +43,9 @@ RF = 1
 c = 4186
 p = 1020
 h = 50
-c1 = c*p*h/1314000
+c1 = c*p*h/31556952
 d = 2000
-c2 = c*p*d/1314000
+c2 = c*p*d/31556952
 
 def delt1(c1, rf, lambd, t1, t2, k):
     return (rf-t1/lambd-k*(t1-t2))/c1
@@ -56,7 +55,7 @@ def delt2(c2, t1, t2, k):
 
 
 
-for i in range(100000):
+for i in range(10000000):
     ddT1 = delt1(c1, RF, lambd, dT1, dT2, k)
     ddT2 = delt2(c2, dT1, dT2, k)
 
@@ -64,7 +63,7 @@ for i in range(100000):
     dT2 += ddT2
 
 
-    if dT1 > (1-np.exp(-1))*RF*lambd and dT2 > (1-np.exp(-1))*RF*lambd:
+    if ddT1 < 10**(-15) and ddT2 < 10**(-15):
         break
 
 print(i)
@@ -95,6 +94,7 @@ for i in range(200):
 plt.plot(oHeatUptake, label='ocean heat uptake', color='blue')
 plt.plot(spaceRadiation, label='space radiation', color='red')
 plt.plot(rf, label='radiative forcing', color='green')
+plt.plot(np.add(oHeatUptake,spaceRadiation), label='ocean heat uptake + space radiation', color='orange')
 plt.xlabel('Time (years)')
 plt.legend()
 plt.title('Ocean heat uptake, space radiation and radiative forcing')
