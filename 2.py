@@ -50,6 +50,7 @@ def delt2(c2, t1, t2, k):
     return k* (t1-t2)/c2
 
 
+
 for i in range(100000):
     ddT1 = delt1(c1, RF, lambd, dT1, dT2, k)
     ddT2 = delt2(c2, dT1, dT2, k)
@@ -58,7 +59,39 @@ for i in range(100000):
     dT2 += ddT2
 
 
-print(dT1- dT2)
+    if dT1 > (1-np.exp(-1))*RF*lambd and dT2 > (1-np.exp(-1))*RF*lambd:
+        break
+
+print(i)
+# print(dT1- dT2)
 print(dT1, dT2)
 print(RF*lambd)
+
+#b) higher lambda => higher equilibrium temp
+#b) higher k => faster heat transfer
+
+
+dT1 = 0
+dT2 = 0
+oHeatUptake = []
+spaceRadiation = []
+rf = []
+for i in range(200):
+    rf.append(RF)
+    oHeatUptake.append(k* (dT1-dT2))
+    spaceRadiation.append(dT1/lambd)
+
+    ddT1 = delt1(c1, RF, lambd, dT1, dT2, k)
+    ddT2 = delt2(c2, dT1, dT2, k)
+
+    dT1 += ddT1
+    dT2 += ddT2
+
+plt.plot(oHeatUptake, label='ocean heat uptake', color='blue')
+plt.plot(spaceRadiation, label='space radiation', color='red')
+plt.plot(rf, label='radiative forcing', color='green')
+plt.xlabel('Time (years)')
+plt.legend()
+plt.title('Ocean heat uptake, space radiation and radiative forcing')
+plt.show()
 
