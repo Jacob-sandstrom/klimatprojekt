@@ -37,7 +37,7 @@ k = 3.06*10**(-3)
 def M(t):
     tau = np.multiply(tau_0, 1 + k*sum(utslapp['CO2 Emissions  (CO2 GtC/yr)'][:t]))
     I = lambda t_hat: np.sum(np.multiply(A, np.exp(np.divide(-t_hat, tau))))
-    return B[0] + np.sum(I(t-t_tilde)*utslapp['CO2 Emissions  (CO2 GtC/yr)'][t_tilde] for t_tilde in range(t+1))
+    return B_0[0] + np.sum(I(t-t_tilde)*utslapp['CO2 Emissions  (CO2 GtC/yr)'][t_tilde] for t_tilde in range(t+1))
 
 
 # TASK 4
@@ -49,7 +49,7 @@ def M(t):
 def Mt6(t, U):
     tau = np.multiply(tau_0, 1 + k*sum(U[:t]))
     I = lambda t_hat: np.sum(np.multiply(A, np.exp(np.divide(-t_hat, tau))))
-    return B[0] + np.sum(I(t-t_tilde)*U[t_tilde] for t_tilde in range(t+1))
+    return B_0[0] + np.sum(I(t-t_tilde)*U[t_tilde] for t_tilde in range(t+1))
 
 # B_array = np.zeros((len(utslapp['CO2 Emissions  (CO2 GtC/yr)']) + 1, 3))
 # B_array[0] = B_0
