@@ -7,7 +7,7 @@ koncentrationer = pd.read_csv('koncentrationerRCP45.csv')
 
 
 # TASK 1
-beta = 0.32
+beta = 0.37
 
 B_0 = np.array([600, 600, 1500])
 F_0 = np.array([[0, 60, 0],
