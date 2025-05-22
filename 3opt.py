@@ -6,11 +6,11 @@ import scipy.optimize as opt
 pco20 = 278.05158
 
 data = pd.read_csv('radiativeForcingRCP45.csv')
-s = 1.20110178
-year = data["Time (year)"].values   
-# rfdata = data["RF CO2 (W/m2)"].values
-rfdata = data["RF aerosols (W/m2)"].values * s
-rfdata += data["RF other than CO2 and aerosols (W/m2)"].values 
+year = data["Time (year)"].values  
+
+
+aerodata = data["RF aerosols (W/m2)"].values
+otherdata = data["RF other than CO2 and aerosols (W/m2)"].values 
 
 
 # concentration_data = pd.read_csv('koncentrationerRCP45.csv')
@@ -66,42 +66,27 @@ for i in range(len(utslapp['CO2 Emissions  (CO2 GtC/yr)'])):
     B_array[i] = B
 
 rfmodel = 5.35*(np.log(B_array[:,0] * 0.469/pco20))
-rfdata = np.add(rfdata, rfmodel)
+otherdata += rfmodel
 
 
-dT1 = 0
-dT2 = 0
+# dT1 = 0
+# dT2 = 0
 
-lambd = 0.8 #0.5-1.3
-kap = 0.70137457 # 0.2-1
-RF = 1
-c = 4186
-p = 1020
-h = 50
-c1 = c*p*h/31556952
-d = 2000
-c2 = c*p*d/31556952
+# lambd = 0.5 #0.5-1.3
+# k = 1 # 0.2-1
+# RF = 1
+# c = 4186
+# p = 1020
+# h = 50
+# c1 = c*p*h/31556952
+# d = 2000
+# c2 = c*p*d/31556952
 
-def delt1(c1, rf, lambd, t1, t2, kap):
-    return (rf-t1/lambd-kap*(t1-t2))/c1
+def delt1(c1, rf, lambd, t1, t2, k):
+    return (rf-t1/lambd-k*(t1-t2))/c1
 
-def delt2(c2, t1, t2, kap):
-    return kap* (t1-t2)/c2
-
-
-t1data = []
-for i in range(len(rfdata)):
-    ddT1 = delt1(c1, rfdata[i], lambd, dT1, dT2, kap)
-    ddT2 = delt2(c2, dT1, dT2, kap)
-
-    dT1 += ddT1
-    dT2 += ddT2
-
-    t1data.append(dT1)
-
-    # if dT1 > (1-np.exp(-1))*RF*lambd and dT2 > (1-np.exp(-1))*RF*lambd:
-    #     break
-
+def delt2(c2, t1, t2, k):
+    return k* (t1-t2)/c2
 
 # Read the CSV file
 file_path = 'NASA_GISS.csv'
@@ -123,15 +108,78 @@ temperature_anomalies = pd.to_numeric(temperature_anomalies, errors='coerce')
 # print(years)
 # print(year)
 
-tempaverage = np.mean(t1data[186:216])
-print(year[186:216])
+# print(year[115:260])
 # t1data = np.subtract(t1data, tempaverage)
 
-temperature_anomalies = np.add(temperature_anomalies, tempaverage)
+dT1 = 0
+dT2 = 0
+
+lambd = 0.5 #0.5-1.3
+c = 4186
+p = 1020
+h = 50
+c1 = c*p*h/31556952
+d = 2000
+c2 = c*p*d/31556952
+
+def minfunc(sk, temperature_anomalies):
+
+    dT1 = 0
+    dT2 = 0
+
+    lambd = 0.5 #0.5-1.3
+    c = 4186
+    p = 1020
+    h = 50
+    c1 = c*p*h/31556952
+    d = 2000
+    c2 = c*p*d/31556952
+
+    rfdata = np.add(aerodata*sk[0], otherdata)
+
+    t1data = []
+    for i in range(len(rfdata)):
+        ddT1 = delt1(c1, rfdata[i], lambd, dT1, dT2, sk[1])
+        ddT2 = delt2(c2, dT1, dT2, sk[1])
+
+        dT1 += ddT1
+        dT2 += ddT2
+
+        t1data.append(dT1)
+
+    tempaverage = np.mean(t1data[186:216])
+
+    temperature_anomalies = np.add(temperature_anomalies, tempaverage)
+    return np.sum(np.square(t1data[115:260]-temperature_anomalies))
+
+
+sk0 = opt.minimize(minfunc, [1,0.5], method='Nelder-Mead', args=temperature_anomalies, options={'disp': True}, bounds=([0, np.inf], [0.2, 1])).x
+# t1data = np.subtract(t1data, tempaverage)
+
+
 
 year = year[:260]
+
+rfdata = np.add(aerodata*sk0[0], otherdata)
+
+t1data = []
+for i in range(len(rfdata)):
+    ddT1 = delt1(c1, rfdata[i], lambd, dT1, dT2, sk0[1])
+    ddT2 = delt2(c2, dT1, dT2, sk0[1])
+
+    dT1 += ddT1
+    dT2 += ddT2
+
+    t1data.append(dT1)
+
+
 rfdata = rfdata[:260]
+
 t1data = t1data[:260]
+
+tempaverage = np.mean(t1data[186:216])
+
+temperature_anomalies = np.add(temperature_anomalies, tempaverage)
 
 # t1data[196:216]
 
@@ -148,5 +196,5 @@ plt.legend()
 plt.hlines(0, 1765, 2024, colors='black', linestyles='dashed')
 
 plt.xlim(1880, 2024)
-
+print(sk0)
 plt.show()
